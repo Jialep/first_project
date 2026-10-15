@@ -83,6 +83,8 @@ elif choice == '2. Log new purchase':
         else:
             purchases[item_category].append([item_puchased,item_cost])
             budget[item_category] -= item_cost
+            if budget[item_category] < 0:
+                st.warning(f'You have exceeded your budget for {item_category} by ${abs(budget[item_category])}')
             save_budget(data)
             st.success(f'{item_puchased} for {item_cost} logged')
 

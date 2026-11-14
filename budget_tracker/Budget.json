@@ -1,0 +1,12 @@
+{
+    "Purchases": {
+        "food": [],
+        "shopping": [],
+        "education": []
+    },
+    "Budget": {
+        "food": 0,
+        "shopping": 0,
+        "education": 0
+    }
+}

@@ -1,4 +1,4 @@
-from category import catalogue,log,show_items,budget_tracker,budget,budget_calc
+from budget_tracker.category import catalogue,log,show_items,budget_tracker,budget,budget_calc
 def main_menu():
     print('Select a function')
     print('1. Set up budget goals')

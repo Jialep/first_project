@@ -1,3 +1,13 @@
-# First_streamlit_webby
-#1 Simple website for you to add events, view events and delete events from any date. Events added are saved
-#2 Simple website for you to to set budgets, log purchases, view or delete them , view remaining budget 
+First_streamlit_webby
+1 Simple website for you to add events, view events and delete events from any date. Events added are saved
+
+Event tracking Calendar:
+Simple website for you to to set budgets, log purchases, view or delete them , view remaining budget 
+Plan for Event Calendar telegram bot:
+-Details needed to log event : Data, Title, details(optional)
+-Able to support multiple fleshed out events within a single date
+-Able to allow lookup for past,present,future events
+-Contain detection for identical events and condition for doing so
+-Format for date : YYYY-MM-DD, reject dates not following format
+-Condition for today: Asian/Singapore
+-Command list for bot: /start, /help, /add, /date, /today, /upcoming, /edit, /delete, /cancel.

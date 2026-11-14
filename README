@@ -9,5 +9,5 @@ Plan for Event Calendar telegram bot:
 -Able to allow lookup for past,present,future events
 -Contain detection for identical events and condition for doing so
 -Format for date : YYYY-MM-DD, reject dates not following format
--Condition for today: Asian/Singapore
+-Condition for today: Asia/Singapore
 -Command list for bot: /start, /help, /add, /date, /today, /upcoming, /edit, /delete, /cancel.

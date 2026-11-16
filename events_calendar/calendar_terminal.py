@@ -2,16 +2,15 @@
 idea: ask for date and then ask for details of event
 empty dict, 
 """
-from datetime import datetime
-import json
-from calendar_core import get_events
+import calendar_core as core
+
 rejection = ['no','not really','n','nah','nope','not at all','never','not now','not today','not this time']
 
-try: #reopens the file, if file dosent exists, create new dict
-    with open("calendar.json", "r") as file:
-        calendar = json.load(file)
-except (FileNotFoundError, json.JSONDecodeError):
-    calendar = {}
+try:
+    calendar=core.load_file()
+except ValueError as error:
+    print(f'Could not load calendar: {error}')
+    raise SystemExit(1)
 
 def menu():
     print("1. Add Event")
@@ -37,8 +36,6 @@ def menu():
             delete_event()
             choice = input("Select 1, 2, 3 or 4: ")
         elif choice == 4:
-            with open("calendar.json", "w") as file:
-                json.dump(calendar, file, indent=4)
             print("Exiting program")
             return
         elif choice not in choices:
@@ -47,31 +44,24 @@ def menu():
 
 def add_event():
     while True:
-
         input_date = input("Enter the date of the event (YYYY-MM-DD): ")
         try:
-            date = datetime.strptime(input_date, "%Y-%m-%d")
-            input_date = date.strftime("%Y-%m-%d")
+            input_date = core.format_date(input_date)
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
             continue
-
         input_event = input("Enter the details of the event: ").strip()
         if input_event == "":
             print("Event details cannot be empty. Please enter valid details.")
             continue
-
         if input_date in calendar:
             if input_event in calendar[input_date]:
                 print("This event already exists on this date.")
                 continue
             calendar[input_date] += [input_event]
-
         else:
             calendar[input_date] = [input_event]
-            with open("calendar.json", "w") as file:
-                json.dump(calendar, file, indent=4) #saves the calender into a file
-
+        core.save_file(calendar)
         next_event = input("Add another event? (yes/no): ")
         if next_event.strip().lower() in rejection:
             print("Event(s) added successfully.")
@@ -79,27 +69,22 @@ def add_event():
 
 def view_events():
     while True:
-
         input_date = input("Enter the date to view events (YYYY-MM-DD): ")
         try:
-            date = datetime.strptime(input_date, "%Y-%m-%d")
-            input_date = date.strftime("%Y-%m-%d")
+            input_date = core.format_date(input_date)
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
             continue
-
         if input_date in calendar:
-            events=get_events(calendar,input_date)
+            events=core.get_events(calendar,input_date)
             if not events:
                 print(f"No events found on {input_date}.")
             else:
                 print(f"Events on {input_date}:")
                 for event in events:
                     print(f"- {event}")
-
         else:
             print(f"No events found on {input_date}.")
-
         next_view = input("View events for another date? (yes/no): ")
         if next_view.strip().lower() in rejection:
             print("Finished viewing events.")
@@ -109,45 +94,36 @@ def delete_event():
     while True:
         input_date = input("Enter the date of the event you wish to delete\n" \
         "(YYYY-MM-DD): ")
-
         try:
-            date = datetime.strptime(input_date, "%Y-%m-%d")
-            input_date = date.strftime("%Y-%m-%d")
+            input_date = core.format_date(input_date)
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
             continue
-
         if input_date not in calendar:
             print(f'No events found on {input_date}.')
             return
-
         if not calendar[input_date]:
             print(f"No events found on {input_date}.")
             print("Returning to main menu.")
             return
-
         print(f"Events on {input_date}:")
         for ind,event in enumerate(calendar[input_date], start=1):
             print(f"{ind}. {event}")
-
         try:
             del_event = int(input("Enter the number of the event you wish to delete:"))
         except ValueError:
             print("Invalid input. Please enter a valid event number.")
             continue
             
-        if del_event < 1 or del_event > len(calendar[input_date]):
+        if core.invalid_delete(del_event,calendar,input_date):
             print("Invalid event number. Please enter a valid event number.")
             continue
-
-        calendar[input_date].pop(del_event - 1)
-        with open("calendar.json", "w") as file:
-            json.dump(calendar, file, indent=4)
-
+        core.pop_event(calendar,del_event,input_date)
+        core.save_file(calendar)
         next_del = input('Delete another event? (yes/no): ')
         if next_del.strip().lower() in rejection:
             print("Event(s) deleted successfully.")
             return
-
-
-
+        
+if __name__=='__main__':
+    menu()

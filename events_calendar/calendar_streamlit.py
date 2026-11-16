@@ -1,40 +1,18 @@
 import json
 from pathlib import Path
-from calendar_core import get_events
+import calendar_core as core
 import streamlit as st
 
 
-CALENDAR_FILE = Path(__file__).with_name("calendar.json")
-
-
-def load_calendar() -> dict[str, list[str]]:
-    try:
-        with CALENDAR_FILE.open("r", encoding="utf-8") as file:
-            data = json.load(file)
-    except FileNotFoundError:
-        return {}
-    except json.JSONDecodeError as error:
-        st.error(f"Could not read {CALENDAR_FILE.name}: {error}")
+try:
+    calendar_data = core.load_file()
+except json.JSONDecodeError as error:
+        st.error(f"Could not read {core.CALENDAR_FILE.name}: {error}")
+        st.stop()
+except ValueError as error:
+        st.error(str(error))
         st.stop()
 
-    if not isinstance(data, dict) or any(
-        not isinstance(day, str)
-        or not isinstance(events, list)
-        or any(not isinstance(event, str) for event in events)
-        for day, events in data.items()
-    ):
-        st.error(f"{CALENDAR_FILE.name} has an invalid format.")
-        st.stop()
-
-    return data
-
-
-def save_calendar(events_by_date: dict[str, list[str]]) -> None:
-    with CALENDAR_FILE.open("w", encoding="utf-8") as file:
-        json.dump(events_by_date, file, indent=4)
-
-
-calendar_data = load_calendar()
 
 st.title("Daily schedule calendar")
 st.subheader("Welcome! Add, view, or delete your calendar events.")
@@ -62,7 +40,7 @@ if action == "Add event":
                 st.warning("This event already exists on that date.")
             else:
                 day_events.append(event_name)
-                save_calendar(calendar_data)
+                core.save_file(calendar_data)
                 st.success(f"Added '{event_name}' for {date_key}.")
 
 elif action == "View events":
@@ -72,7 +50,7 @@ elif action == "View events":
 
     if submitted:
         date_key = event_date.strftime("%Y-%m-%d")
-        day_events = get_events(calendar_data,date_key)
+        day_events = core.get_events(calendar_data,date_key)
         if day_events:
             st.write(f"Events on {date_key}:")
             for event in day_events:
@@ -99,5 +77,5 @@ else:
 
         if submitted:
             calendar_data[selected_date].remove(selected_event)
-            save_calendar(calendar_data)
+            core.save_file(calendar_data)
             st.success(f"Deleted '{selected_event}' from {selected_date}.")

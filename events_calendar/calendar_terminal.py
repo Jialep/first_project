@@ -18,49 +18,39 @@ def menu():
     print("3. Delete Event")
     print("4. Exit")
     choices = [1, 2, 3, 4]
-    choice = input("Select 1, 2, 3 or 4: ")
     while True:
+        choice = input("Select 1, 2, 3 or 4: ")
         try:
             choice = int(choice)
         except ValueError:
             print("Invalid input, retry")
-            choice = input("Select 1, 2, 3 or 4: ")
             continue
         if choice == 1:
             add_event()
-            choice = input("Select 1, 2, 3 or 4: ")
         elif choice == 2:
             view_events()
-            choice = input("Select 1, 2, 3 or 4: ")
         elif choice == 3:
             delete_event()
-            choice = input("Select 1, 2, 3 or 4: ")
         elif choice == 4:
             print("Exiting program")
             return
         elif choice not in choices:
             print("Invalid input, retry")
-            choice = input("Select 1, 2, 3 or 4: ")
 
 def add_event():
     while True:
         input_date = input("Enter the date of the event (YYYY-MM-DD): ")
         try:
             input_date = core.format_date(input_date)
-        except ValueError:
-            print("Invalid date format. Please use YYYY-MM-DD.")
+        except ValueError as error:
+            print(error)
             continue
         input_event = input("Enter the details of the event: ").strip()
-        if input_event == "":
-            print("Event details cannot be empty. Please enter valid details.")
+        try:
+            core.add_event(calendar,input_date,input_event)
+        except (ValueError,core.EmptyError) as error:
+            print(error)
             continue
-        if input_date in calendar:
-            if input_event in calendar[input_date]:
-                print("This event already exists on this date.")
-                continue
-            calendar[input_date] += [input_event]
-        else:
-            calendar[input_date] = [input_event]
         core.save_file(calendar)
         next_event = input("Add another event? (yes/no): ")
         if next_event.strip().lower() in rejection:
@@ -72,19 +62,16 @@ def view_events():
         input_date = input("Enter the date to view events (YYYY-MM-DD): ")
         try:
             input_date = core.format_date(input_date)
-        except ValueError:
-            print("Invalid date format. Please use YYYY-MM-DD.")
-            continue
-        if input_date in calendar:
             events=core.get_events(calendar,input_date)
-            if not events:
-                print(f"No events found on {input_date}.")
-            else:
-                print(f"Events on {input_date}:")
-                for event in events:
-                    print(f"- {event}")
-        else:
-            print(f"No events found on {input_date}.")
+        except ValueError as error:
+            print(error)
+            continue
+        except core.EmptyError as error:
+            print(error)
+            return
+        print(f"Events on {input_date}:")
+        for event in events:
+            print(f"- {event}")
         next_view = input("View events for another date? (yes/no): ")
         if next_view.strip().lower() in rejection:
             print("Finished viewing events.")
@@ -96,29 +83,25 @@ def delete_event():
         "(YYYY-MM-DD): ")
         try:
             input_date = core.format_date(input_date)
-        except ValueError:
-            print("Invalid date format. Please use YYYY-MM-DD.")
+            events=core.get_events(calendar,input_date)
+        except ValueError as error:
+            print(error)
             continue
-        if input_date not in calendar:
-            print(f'No events found on {input_date}.')
+        except core.EmptyError as error:
+            print(error)
             return
-        if not calendar[input_date]:
-            print(f"No events found on {input_date}.")
-            print("Returning to main menu.")
-            return
-        print(f"Events on {input_date}:")
-        for ind,event in enumerate(calendar[input_date], start=1):
+        for ind,event in enumerate(events, start=1):
             print(f"{ind}. {event}")
+        del_event=input(
+            "Enter the number of the event you wish to delete:"
+            )
         try:
-            del_event = int(input("Enter the number of the event you wish to delete:"))
-        except ValueError:
-            print("Invalid input. Please enter a valid event number.")
+            core.delete_helper(calendar,input_date,del_event)
+        except (
+            core.MissingError,core.InvalidError,core.EmptyError,ValueError
+        )as error:
+            print(error)
             continue
-            
-        if core.invalid_delete(del_event,calendar,input_date):
-            print("Invalid event number. Please enter a valid event number.")
-            continue
-        core.pop_event(calendar,del_event,input_date)
         core.save_file(calendar)
         next_del = input('Delete another event? (yes/no): ')
         if next_del.strip().lower() in rejection:

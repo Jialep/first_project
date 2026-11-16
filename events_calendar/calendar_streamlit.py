@@ -36,12 +36,12 @@ if action == "Add event":
         else:
             date_key = event_date.strftime("%Y-%m-%d")
             day_events = calendar_data.setdefault(date_key, [])
-            if event_name in day_events:
-                st.warning("This event already exists on that date.")
-            else:
-                day_events.append(event_name)
-                core.save_file(calendar_data)
-                st.success(f"Added '{event_name}' for {date_key}.")
+            try:
+                core.add_event(calendar_data,date_key,day_events)
+            except ValueError as error:
+                st.warning(error)
+            core.save_file(calendar_data)
+            st.success(f"Added '{event_name}' for {date_key}.")
 
 elif action == "View events":
     with st.form("view_events_form"):

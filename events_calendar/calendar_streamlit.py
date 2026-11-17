@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import calendar_core as core
 import streamlit as st
 
@@ -37,7 +36,7 @@ if action == "Add event":
             date_key = event_date.strftime("%Y-%m-%d")
             day_events = calendar_data.setdefault(date_key, [])
             try:
-                core.add_event(calendar_data,date_key,day_events)
+                core.add_event(calendar_data,date_key,event_name)
             except ValueError as error:
                 st.warning(error)
             core.save_file(calendar_data)
@@ -50,32 +49,39 @@ elif action == "View events":
 
     if submitted:
         date_key = event_date.strftime("%Y-%m-%d")
-        day_events = core.get_events(calendar_data,date_key)
-        if day_events:
-            st.write(f"Events on {date_key}:")
-            for event in day_events:
-                st.write(f"- {event}")
-        else:
-            st.info(f"No events found on {date_key}.")
+        try:
+            day_events = core.get_events(calendar_data,date_key)
+        except core.EmptyError as error:
+            st.warning(error)
+        st.write(f"Events on {date_key}:")
+        for event in day_events:
+            st.write(f"- {event}")
 
-else:
-    dates_with_events = sorted(
-        (day for day, events in calendar_data.items() if events),
-        reverse=True,
-    )
 
-    if not dates_with_events:
-        st.info("There are no events to delete.")
-    else:
-        selected_date = st.selectbox("Choose a date", dates_with_events)
-        with st.form("delete_event_form"):
-            selected_event = st.selectbox(
-                "Choose the event to delete",
-                calendar_data[selected_date],
-            )
-            submitted = st.form_submit_button("Delete event")
-
-        if submitted:
-            calendar_data[selected_date].remove(selected_event)
-            core.save_file(calendar_data)
-            st.success(f"Deleted '{selected_event}' from {selected_date}.")
+elif action == 'Delete event':
+    selected_date= st.date_input("Choose a date to edit",value=None)
+    if selected_date is None:
+        st.info('Select a date to view events')
+        st.stop()
+    date_key=selected_date.strftime('%Y-%m-%d')
+    try:
+        events = core.get_events(calendar_data,date_key)
+    except core.EmptyError as error:
+        st.info(error)
+        st.stop()
+    with st.form('select_event_to_del'):
+        selected_event= st.selectbox('Choose event to remove',events)
+        submitted = st.form_submit_button('Continue')
+    if submitted:
+            try:
+                event_index=events.index(selected_event)
+                event_number=str(event_index+1)
+                core.delete_helper(calendar_data,date_key,event_number)
+            except (core.MissingError,
+                    core.InvalidError,
+                    core.EmptyError,
+                    ValueError) as error:
+                st.error(error)
+            else:
+                core.save_file(calendar_data)
+                st.success(f"Deleted '{selected_event}' from {selected_date}.")

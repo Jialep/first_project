@@ -58,7 +58,6 @@ def format_date(input_date):
         raise ValueError ("Invalid date format. Please use YYYY-MM-DD.")
     return formatted_date
 
-
 #file_loading_and_saving
 def save_file(data):
     with CALENDAR_FILE.open("w",encoding='utf-8') as file:
